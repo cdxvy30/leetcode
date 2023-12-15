@@ -10,64 +10,55 @@ const (
 	Heavy      = 1
 )
 
-func compare(coins []Coin, start1, end1, start2, end2 int) int {
-	sum1, sum2 := 0, 0
-	for i := start1; i < end1; i++ {
-		sum1 += int(coins[i])
-	}
-	for i := start2; i < end2; i++ {
-		sum2 += int(coins[i])
-	}
-	if sum1 < sum2 {
-		return -1
-	} else if sum1 == sum2 {
-		return 0
-	} else {
-		return 1
-	}
+func compare(coins []Coin, a, b, c, d int) int {
+	return int(coins[a] + coins[b] + coins[c] + coins[d])
 }
 
 func findFake(coins []Coin) (int, Coin) {
-	comp1 := compare(coins, 0, 4, 4, 8)
+	comp1 := compare(coins, 0, 1, 2, 3) - compare(coins, 4, 5, 6, 7)
 
-	switch comp1 {
-	case 0: // Fake is in C (or doesn't exist)
-		comp2 := compare(coins, 8, 10, 0, 2)
-		switch comp2 {
-		case 0:
-			comp3 := compare(coins, 10, 11, 11, 12)
-			return 10 + comp3, Coin(comp3)
-		default:
-			comp3 := compare(coins, 8, 9, 9, 10)
-			return 8 + comp3, Coin(comp3)
+	switch {
+	case comp1 == 0: // C contains fake coin or no fake coin exists
+		comp2 := compare(coins, 8, 9, 10, 11) - compare(coins, 0, 1, 2, 3)
+		switch {
+		case comp2 == 0:
+			return -1, Real
+		case comp2 < 0: // 8, 9, 10, 11, and one of them is Light
+			if coins[8] != coins[9] {
+				return 8, coins[8]
+			}
+			return 10, coins[10]
+		case comp2 > 0: // 8, 9, 10, 11, and one of them is Heavy
+			if coins[8] != coins[9] {
+				return 8, coins[8]
+			}
+			return 10, coins[10]
 		}
-	case -1: // Fake is in B
-		comp2 := compare(coins, 4, 7, 0, 3)
-		switch comp2 {
-		case -1:
-			comp3 := compare(coins, 4, 5, 5, 6)
-			return 4 + comp3, Coin(comp3)
-		default:
-			comp3 := compare(coins, 7, 8, 0, 1)
-			return 7, Coin(comp3)
+	case comp1 < 0: // B contains the fake coin, and it is Light
+		comp2 := compare(coins, 4, 5, 6, 7) - compare(coins, 0, 1, 2, 3)
+		if comp2 != 0 {
+			if coins[4] != coins[5] {
+				return 4, coins[4]
+			}
+			return 6, coins[6]
 		}
-	case 1: // Fake is in A
-		comp2 := compare(coins, 0, 3, 4, 7)
-		switch comp2 {
-		case 1:
-			comp3 := compare(coins, 0, 1, 1, 2)
-			return 0 + comp3, Coin(comp3)
-		default:
-			comp3 := compare(coins, 3, 4, 4, 5)
-			return 3, Coin(comp3)
+	case comp1 > 0: // A contains the fake coin, and it is Heavy
+		comp2 := compare(coins, 0, 1, 2, 3) - compare(coins, 4, 5, 6, 7)
+		if comp2 != 0 {
+			if coins[0] != coins[1] {
+				return 0, coins[0]
+			}
+			return 2, coins[2]
 		}
 	}
-	return -1, Real // Should not reach here
+
+	return -1, Real // should not reach here
 }
 
 func main() {
-	coins := []Coin{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1} // Last coin is heavy (fake)
+	coins := []Coin{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1} // the last coin is fake and Heavy
 	index, result := findFake(coins)
+
 	if result == Real {
 		fmt.Println("No fake coin found.")
 	} else {
